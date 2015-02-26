@@ -257,7 +257,8 @@ static int zfs_check_clearable(char *dataset, nvlist_t *props,
     nvlist_t **errors);
 static int zfs_fill_zplprops_root(uint64_t, nvlist_t *, nvlist_t *,
     boolean_t *);
-int zfs_set_prop_nvlist(const char *, zprop_source_t, nvlist_t *, nvlist_t *);
+int zfs_set_prop_nvlist(const char *, zprop_source_t, nvlist_t *, nvlist_t *,
+    boolean_t);
 static int get_nvlist(uint64_t nvl, uint64_t size, int iflag, nvlist_t **nvp);
 
 static void
@@ -1515,7 +1516,7 @@ zfs_ioc_pool_create(zfs_cmd_t *zc)
 	 * Set the remaining root properties
 	 */
 	if (!error && (error = zfs_set_prop_nvlist(zc->zc_name,
-	    ZPROP_SRC_LOCAL, rootprops, NULL)) != 0)
+	    ZPROP_SRC_LOCAL, rootprops, NULL, B_FALSE)) != 0)
 		(void) spa_destroy(zc->zc_name);
 
 pool_props_bad:
@@ -2581,7 +2582,7 @@ zfs_prop_set_special(const char *dsname, zprop_source_t source,
  */
 int
 zfs_set_prop_nvlist(const char *dsname, zprop_source_t source, nvlist_t *nvl,
-    nvlist_t *errlist)
+    nvlist_t *errlist, boolean_t atomic)
 {
 	nvpair_t *pair;
 	nvpair_t *propval;
@@ -2664,6 +2665,24 @@ retry:
 		if (err == 0)
 			err = zfs_check_settable(dsname, pair, CRED());
 
+		/*
+		 * Atomically setting old-style special properties is not
+		 * supported.
+		 */
+		switch (prop) {
+		case ZFS_PROP_FILESYSTEM_LIMIT:
+		case ZFS_PROP_SNAPSHOT_LIMIT:
+		case ZFS_PROP_VOLSIZE:
+		case ZFS_PROP_SNAPDEV:
+		case ZFS_PROP_VERSION:
+		default:
+			if (prop != ZPROP_INVAL ||
+			    zfs_prop_userquota(propname) == B_FALSE)
+				break;
+			if (atomic == B_TRUE)
+				err = SET_ERROR(ENOTSUP);
+		}
+
 		if (err == 0) {
 			nvlist_t *tnvl = NULL;
 			err = zfs_prop_set_special(dsname, source, pair);
@@ -2705,7 +2724,8 @@ retry:
 	}
 
 	if (!nvlist_empty(genericnvl) &&
-	    dsl_props_set(dsname, source, genericnvl) != 0) {
+	    (rv = dsl_props_set(dsname, source, genericnvl)) != 0 &&
+	    atomic == B_FALSE) {
 		/*
 		 * If this fails, we still want to set as many properties as we
 		 * can, so try setting them individually.
@@ -2807,7 +2827,8 @@ clear_received_props(const char *dsname, nvlist_t *props,
 		 */
 		zprop_source_t flags = (ZPROP_SRC_NONE |
 		    (dsl_prop_get_hasrecvd(dsname) ? ZPROP_SRC_RECEIVED : 0));
-		err = zfs_set_prop_nvlist(dsname, flags, cleared_props, NULL);
+		err = zfs_set_prop_nvlist(dsname, flags, cleared_props, NULL,
+		    B_FALSE);
 	}
 	nvlist_free(cleared_props);
 	return (err);
@@ -2851,7 +2872,8 @@ zfs_ioc_set_prop(zfs_cmd_t *zc)
 
 	errors = fnvlist_alloc();
 	if (error == 0)
-		error = zfs_set_prop_nvlist(zc->zc_name, source, nvl, errors);
+		error = zfs_set_prop_nvlist(zc->zc_name, source, nvl, errors,
+		    B_FALSE);
 
 	if (zc->zc_nvlist_dst != 0 && errors != NULL) {
 		(void) put_nvlist(zc, errors);
@@ -3351,7 +3373,7 @@ zfs_ioc_create(const char *fsname, nvlist_t *innvl, nvlist_t *outnvl)
 	 */
 	if (error == 0) {
 		error = zfs_set_prop_nvlist(fsname, ZPROP_SRC_LOCAL,
-		    nvprops, outnvl);
+		    nvprops, outnvl, B_FALSE);
 		if (error != 0)
 			(void) dsl_destroy_head(fsname);
 	}
@@ -3399,7 +3421,7 @@ zfs_ioc_clone(const char *fsname, nvlist_t *innvl, nvlist_t *outnvl)
 	 */
 	if (error == 0) {
 		error = zfs_set_prop_nvlist(fsname, ZPROP_SRC_LOCAL,
-		    nvprops, outnvl);
+		    nvprops, outnvl, B_FALSE);
 		if (error != 0)
 			(void) dsl_destroy_head(fsname);
 	}
@@ -4244,7 +4266,7 @@ zfs_ioc_recv(zfs_cmd_t *zc)
 
 		if (props_error == 0) {
 			(void) zfs_set_prop_nvlist(tofs, ZPROP_SRC_RECEIVED,
-			    props, errors);
+			    props, errors, B_FALSE);
 		}
 	}
 
@@ -4329,7 +4351,7 @@ zfs_ioc_recv(zfs_cmd_t *zc)
 		if (origprops != NULL &&
 		    zfs_set_prop_nvlist(tofs, (first_recvd_props ?
 		    ZPROP_SRC_LOCAL : ZPROP_SRC_RECEIVED),
-		    origprops, NULL) != 0) {
+		    origprops, NULL, B_FALSE) != 0) {
 			/*
 			 * We stashed the original properties but failed to
 			 * restore them.
@@ -5546,6 +5568,32 @@ zfs_stable_ioc_promote(const char *fsname, nvlist_t *innvl, nvlist_t *outnvl,
 	return (error);
 }
 
+static int
+zfs_stable_ioc_set_props(const char *fsname, nvlist_t *innvl, nvlist_t *outnvl,
+    nvlist_t *opts, uint64_t version)
+{
+	zprop_source_t source = ZPROP_SRC_LOCAL;
+	int error = 0;
+
+	if (nvlist_exists(opts, "received")) {
+		nvlist_t *origprops;
+		source = ZPROP_SRC_RECEIVED;
+
+		if (dsl_prop_get_received(fsname, &origprops) == 0) {
+			(void) clear_received_props(fsname, origprops, innvl);
+			nvlist_free(origprops);
+		}
+
+		error = dsl_prop_set_hasrecvd(fsname);
+	}
+
+	if (error == 0)
+		error = zfs_set_prop_nvlist(fsname, source, innvl, outnvl,
+		    nvlist_exists(opts, "noatomic") == B_FALSE);
+
+	return (error);
+}
+
 int
 pool_status_check(const char *name, zfs_ioc_namecheck_t type,
     zfs_ioc_poolcheck_t check);
@@ -5651,6 +5699,14 @@ static const zfs_stable_ioc_vec_t zfs_stable_ioc_vec[] = {
 	.zvec_namecheck		= DATASET_NAME,
 	.zvec_pool_check	= POOL_CHECK_SUSPENDED | POOL_CHECK_READONLY,
 	.zvec_smush_outnvlist	= B_FALSE,
+	.zvec_allow_log		= B_TRUE,
+},
+{	.zvec_name		= "zfs_set_props",
+	.zvec_func		= zfs_stable_ioc_set_props,
+	.zvec_secpolicy		= zfs_secpolicy_config,
+	.zvec_namecheck		= DATASET_NAME,
+	.zvec_pool_check	= POOL_CHECK_SUSPENDED | POOL_CHECK_READONLY,
+	.zvec_smush_outnvlist	= B_TRUE,
 	.zvec_allow_log		= B_TRUE,
 },
 {	.zvec_name		= "zfs_destroy_snaps",
