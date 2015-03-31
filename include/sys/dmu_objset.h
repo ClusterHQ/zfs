@@ -183,6 +183,10 @@ int dmu_objset_getlist(struct dsl_pool *dp, uint64_t ddobj, int flags,
     dmu_oslnode_t **grandparent, unsigned int depth);
 void dmu_objset_freelist(dmu_oslnode_t *parent);
 
+const char *dmu_objset_type_name(dmu_objset_type_t type);
+nvlist_t *dmu_objset_stats_nvlist(dmu_objset_stats_t *stat);
+int dmu_objset_stat_nvlts (nvlist_t *nvl, dmu_objset_stats_t *stat);
+
 void dmu_objset_init(void);
 void dmu_objset_fini(void);
 
