@@ -5649,16 +5649,16 @@ zfs_ioc_stable(zfs_cmd_t *zc)
 			goto out;
 	}
 
-	if ((error = nvlist_lookup_string(mnvl, "cmd", &cmd)))
+	if ((error = nvlist_lookup_string(mnvl, "cmd", &cmd)) != 0)
 		return (error);
 
-	if ((error = nvlist_lookup_nvlist(mnvl, "innvl", &innvl)))
+	if ((error = nvlist_lookup_nvlist(mnvl, "innvl", &innvl)) != 0)
 		return (error);
 
-	if (nvlist_lookup_nvlist(mnvl, "opts", &opts))
+	if (nvlist_lookup_nvlist(mnvl, "opts", &opts) != 0)
 		opts = NULL;
 
-	if ((error = nvlist_lookup_uint64(mnvl, "version", &version)))
+	if ((error = nvlist_lookup_uint64(mnvl, "version", &version)) != 0)
 		return (error);
 
 	/* We do not support sequence numbers above 0 right now */
