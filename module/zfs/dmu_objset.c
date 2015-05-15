@@ -1546,6 +1546,159 @@ dmu_dir_list_next(objset_t *os, int namelen, char *name,
 	return (0);
 }
 
+dmu_oslnode_t *
+dmu_oslnode_alloc(dmu_oslnode_t *parent, dsl_dataset_t *ds)
+{
+	dmu_oslnode_t *child = kmem_zalloc(sizeof (dmu_oslnode_t), KM_SLEEP);
+
+	list_create(&parent->dol_child, sizeof (dmu_oslnode_t),
+		    offsetof(dmu_oslnode_t, dol_sibling));
+
+	if (parent != NULL)
+		list_insert_tail(&parent->dol_child, child);
+
+	child->dol_ds = ds;
+
+	return (child);
+}
+
+/*
+ * Function to generate tree of dsl_dataset structures with holds on them in
+ * the form of list_t of children and list_node_t of siblings.
+ *
+ * dp		The pool in which we are generating this tree.
+ * ddobj	The dsl directory objectory forming the root of the tree.
+ * flags	Whether or not to recurse or add snapshots
+ * grandparent	A handle that is updated with the generated tree. Callers
+ * 		should pass NULL.
+ * depth	The maximum depth permitted for recursion.
+ *
+ * Returns 0 on success and the complete tree is made or an error code when a
+ * failure occurs and the tree is either incomplete or not made at all.
+ *
+ * XXX: What error codes?
+ * XXX: What happens if we overrun the stack?
+ */
+
+int
+dmu_objset_getlist(dsl_pool_t *dp, uint64_t ddobj, int flags,
+    dmu_oslnode_t **grandparent, unsigned int depth)
+{
+	dsl_dir_t *dd;
+	dsl_dataset_t *ds;
+	zap_cursor_t zc;
+	zap_attribute_t *attr;
+	uint64_t thisobj;
+	dmu_oslnode_t *parent;
+	int err;
+
+	ASSERT(dsl_pool_config_held(dp));
+	ASSERT(grandparent != NULL);
+
+	err = dsl_dir_hold_obj(dp, ddobj, NULL, FTAG, &dd);
+	if (err != 0)
+		goto out;
+
+	/* Don't visit hidden ($MOS & $ORIGIN) objsets. */
+	if (dd->dd_myname[0] == '$') {
+		dsl_dir_rele(dd, FTAG);
+		return (0);
+	}
+
+	thisobj = dd->dd_phys->dd_head_dataset_obj;
+	attr = kmem_alloc(sizeof (zap_attribute_t), KM_SLEEP);
+
+	err = dsl_dataset_hold_obj(dp, thisobj, FTAG, &ds);
+	if (err != 0)
+		goto out;
+
+	parent = dmu_oslnode_alloc(*grandparent, ds);
+
+	/*
+	 * Iterate over all children.
+	 */
+	if (depth && (flags & DS_FIND_CHILDREN)) {
+		for (zap_cursor_init(&zc, dp->dp_meta_objset,
+		    dd->dd_phys->dd_child_dir_zapobj);
+		    zap_cursor_retrieve(&zc, attr) == 0;
+		    (void) zap_cursor_advance(&zc)) {
+			ASSERT3U(attr->za_integer_length, ==,
+			    sizeof (uint64_t));
+			ASSERT3U(attr->za_num_integers, ==, 1);
+
+			err = dmu_objset_getlist(dp, attr->za_first_integer,
+			    flags, &parent, depth - 1);
+			if (err != 0)
+				break;
+		}
+		zap_cursor_fini(&zc);
+
+		if (err != 0) {
+			dsl_dir_rele(dd, FTAG);
+			kmem_free(attr, sizeof (zap_attribute_t));
+			goto out;
+		}
+	}
+
+	/*
+	 * Iterate over all snapshots.
+	 */
+	if (depth > 1 && (flags & DS_FIND_SNAPSHOTS)) {
+		dsl_dataset_t *ds = parent->dol_ds;
+
+		if (err == 0) {
+			uint64_t snapobj = ds->ds_phys->ds_snapnames_zapobj;
+
+			for (zap_cursor_init(&zc, dp->dp_meta_objset, snapobj);
+			    zap_cursor_retrieve(&zc, attr) == 0;
+			    (void) zap_cursor_advance(&zc)) {
+				dmu_oslnode_t *child;
+				ASSERT3U(attr->za_integer_length, ==,
+				    sizeof (uint64_t));
+				ASSERT3U(attr->za_num_integers, ==, 1);
+
+				err = dsl_dataset_hold_obj(dp,
+				    attr->za_first_integer, FTAG, &ds);
+				if (err != 0)
+					break;
+				child = dmu_oslnode_alloc(parent, ds);
+
+				if (err != 0)
+					break;
+			}
+			zap_cursor_fini(&zc);
+		}
+	}
+
+	dsl_dir_rele(dd, FTAG);
+	kmem_free(attr, sizeof (zap_attribute_t));
+
+out:
+	if (*grandparent == NULL)
+		*grandparent = parent;
+	return (err);
+}
+
+void
+dmu_objset_freelist(dmu_oslnode_t *parent)
+{
+	list_t *list;
+	dmu_oslnode_t *child;
+	if (parent == NULL)
+		return;
+
+	if (parent->dol_ds != NULL)
+		dsl_dataset_rele(parent->dol_ds, FTAG);
+
+	list = &parent->dol_child;
+	while ((child = list_head(list))) {
+		list_remove(list, child);
+		dmu_objset_freelist(child);
+	}
+
+	kmem_free(parent, sizeof (dmu_oslnode_t));
+}
+
 /*
  * Find objsets under and including ddobj, call func(ds) on each.
  */

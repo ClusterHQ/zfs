@@ -120,6 +120,12 @@ struct objset {
 	sa_os_t *os_sa;
 };
 
+typedef struct dmu_oslnode {
+	list_t dol_child;
+	list_node_t dol_sibling;
+	struct dsl_dataset *dol_ds;
+} dmu_oslnode_t;
+
 #define	DMU_META_OBJSET		0
 #define	DMU_META_DNODE_OBJECT	0
 #define	DMU_OBJECT_IS_SPECIAL(obj) ((int64_t)(obj) <= 0)
@@ -167,6 +173,15 @@ boolean_t dmu_objset_userused_enabled(objset_t *os);
 int dmu_objset_userspace_upgrade(objset_t *os);
 boolean_t dmu_objset_userspace_present(objset_t *os);
 int dmu_fsname(const char *snapname, char *buf);
+
+/* Code for handling userspace interface */
+extern const char *dmu_objset_types[];
+
+dmu_oslnode_t *
+dmu_oslnode_alloc(dmu_oslnode_t *parent, struct dsl_dataset *ds);
+int dmu_objset_getlist(struct dsl_pool *dp, uint64_t ddobj, int flags,
+    dmu_oslnode_t **grandparent, unsigned int depth);
+void dmu_objset_freelist(dmu_oslnode_t *parent);
 
 void dmu_objset_init(void);
 void dmu_objset_fini(void);
