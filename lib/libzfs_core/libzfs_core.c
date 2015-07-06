@@ -238,6 +238,21 @@ lzc_destroy(const char *fsname)
 	return (error);
 }
 
+/* XXX "inherit" received values (zfs inherit -S) ? */
+int
+lzc_inherit_prop(const char *fsname, const char *name)
+{
+	zfs_cmd_t zc = { 0 };
+	int error;
+
+	(void) strlcpy(zc.zc_name, fsname, sizeof (zc.zc_name));
+	(void) strlcpy(zc.zc_value, name, sizeof (zc.zc_value));
+	error = ioctl(g_fd, ZFS_IOC_INHERIT_PROP, &zc);
+	if (error != 0)
+		error = errno;
+	return (error);
+}
+
 /*
  * Creates snapshots.
  *
