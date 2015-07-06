@@ -196,6 +196,23 @@ lzc_clone(const char *fsname, const char *origin,
 	return (error);
 }
 
+int
+lzc_promote(const char *fsname, char *snapnamebuf, int snapnamelen)
+{
+	zfs_cmd_t zc = { 0 };
+	int error;
+
+	/* XXX zc_value <- name of origin snapshot, needed for unmounting */
+	(void) strlcpy(zc.zc_name, fsname, sizeof (zc.zc_name));
+	error = ioctl(g_fd, ZFS_IOC_PROMOTE, &zc);
+	if (error != 0) {
+		error = errno;
+		if (snapnamebuf != NULL)
+			(void) strlcpy(snapnamebuf, zc.zc_string, snapnamelen);
+	}
+	return (error);
+}
+
 /*
  * Creates snapshots.
  *
