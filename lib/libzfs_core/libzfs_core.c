@@ -372,6 +372,41 @@ lzc_destroy_snaps(nvlist_t *snaps, boolean_t defer, nvlist_t **errlist)
 }
 
 int
+lzc_list_snaps(const char *fsname, uint64_t *cursor, char *name)
+{
+	zfs_cmd_t zc = { 0 };
+	int error;
+
+	(void) strlcpy(zc.zc_name, fsname, sizeof (zc.zc_name));
+	zc.zc_simple = B_TRUE;
+	zc.zc_cookie = *cursor;
+	error = ioctl(g_fd, ZFS_IOC_SNAPSHOT_LIST_NEXT, &zc);
+	if (error != 0)
+		return (errno);
+
+	(void) strcpy(name, zc.zc_name);
+	*cursor = zc.zc_cookie;
+	return (0);
+}
+
+int
+lzc_list_children(const char *fsname, uint64_t *cursor, char *name)
+{
+	zfs_cmd_t zc = { 0 };
+	int error;
+
+	(void) strlcpy(zc.zc_name, fsname, sizeof (zc.zc_name));
+	zc.zc_cookie = *cursor;
+	error = ioctl(g_fd, ZFS_IOC_DATASET_LIST_NEXT, &zc);
+	if (error != 0)
+		return (errno);
+
+	(void) strcpy(name, zc.zc_name);
+	*cursor = zc.zc_cookie;
+	return (0);
+}
+
+int
 lzc_snaprange_space(const char *firstsnap, const char *lastsnap,
     uint64_t *usedp)
 {
