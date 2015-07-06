@@ -267,6 +267,17 @@ lzc_set_prop(const char *fsname, nvlist_t *props)
 	return (error);
 }
 
+int
+lzc_get_props(const char *fsname, nvlist_t **props)
+{
+	int error;
+	nvlist_t *args = fnvlist_alloc();
+
+	error = lzc_ioctl(ZFS_IOC_OBJSET_STATS, fsname, args, props);
+	nvlist_free(args);
+	return (error);
+}
+
 /*
  * Creates snapshots.
  *
