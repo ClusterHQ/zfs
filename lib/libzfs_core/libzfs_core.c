@@ -253,6 +253,20 @@ lzc_inherit_prop(const char *fsname, const char *name)
 	return (error);
 }
 
+int
+lzc_set_prop(const char *fsname, nvlist_t *props)
+{
+	nvpair_t *elem;
+	int error;
+
+	/* the list must have exactly one element */
+	if ((elem = nvlist_next_nvpair(props, NULL)) == NULL ||
+	    nvlist_next_nvpair(props, elem) != NULL)
+		return (EINVAL);
+	error = lzc_ioctl(ZFS_IOC_SET_PROP, fsname, props, NULL);
+	return (error);
+}
+
 /*
  * Creates snapshots.
  *
