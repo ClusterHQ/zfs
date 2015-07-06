@@ -213,6 +213,20 @@ lzc_promote(const char *fsname, char *snapnamebuf, int snapnamelen)
 	return (error);
 }
 
+int
+lzc_rename(const char *source, const char *target)
+{
+	zfs_cmd_t zc = { 0 };
+	int error;
+
+	(void) strlcpy(zc.zc_name, source, sizeof (zc.zc_name));
+	(void) strlcpy(zc.zc_value, target, sizeof (zc.zc_value));
+	error = ioctl(g_fd, ZFS_IOC_RENAME, &zc);
+	if (error != 0)
+		error = errno;
+	return (error);
+}
+
 /*
  * Creates snapshots.
  *
