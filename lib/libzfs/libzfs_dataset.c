@@ -3774,7 +3774,7 @@ zfs_rename(zfs_handle_t *zhp, const char *target, boolean_t recursive,
 	libzfs_handle_t *hdl = zhp->zfs_hdl;
 	char errbuf[1024];
 	char *errname;
-	nvlist_t *opts;
+	nvlist_t *opts = NULL;
 
 	/* if we have the same exact name, just return success */
 	if (strcmp(zhp->zfs_name, target) == 0)
