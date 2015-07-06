@@ -227,6 +227,17 @@ lzc_rename(const char *source, const char *target)
 	return (error);
 }
 
+int
+lzc_destroy(const char *fsname)
+{
+	int error;
+
+	nvlist_t *args = fnvlist_alloc();
+	error = lzc_ioctl(ZFS_IOC_DESTROY, fsname, args, NULL);
+	nvlist_free(args);
+	return (error);
+}
+
 /*
  * Creates snapshots.
  *
