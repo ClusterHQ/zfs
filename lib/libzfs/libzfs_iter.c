@@ -126,8 +126,9 @@ zfs_iter_generic(libzfs_handle_t *hdl, const char *name, zfs_type_t type,
 
 	tnvl = zfs_type_to_nvl(type);
 	fnvlist_add_nvlist(opts, "type", tnvl);
+	fnvlist_add_int32(opts, "fd", fildes[1]);
 
-	if ((ret = lzc_list(name, fildes[1], opts)) != 0) {
+	if ((ret = lzc_list(name, opts)) != 0) {
 		fnvlist_free(opts);
 		close(fildes[0]);
 		close(fildes[1]);

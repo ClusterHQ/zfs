@@ -941,14 +941,12 @@ lzc_destroy_bookmarks(nvlist_t *bmarks, nvlist_t **errlist)
  * stream NULL record is returned.
  */
 int
-lzc_list(const char *name, int fdin, nvlist_t *opts)
+lzc_list(const char *name, nvlist_t *opts)
 {
 	int error;
 	nvlist_t *innvl = fnvlist_alloc();
 
-	fnvlist_add_int32(innvl, "fd", fdin);
 	error = lzc_ioctl("zfs_list", name, innvl, opts, NULL, 0);
-	fnvlist_free(innvl);
 
 	return (error);
 }

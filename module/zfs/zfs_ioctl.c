@@ -5812,7 +5812,7 @@ zfs_stable_ioc_zfs_list(const char *fsname, nvlist_t *innvl,
 	uint64_t ddobj;
 	int error;
 
-	error = nvlist_lookup_int32(innvl, "fd", &fd);
+	error = nvlist_lookup_int32(opts, "fd", &fd);
 	if (error != 0)
 		return (SET_ERROR(EINVAL));
 
