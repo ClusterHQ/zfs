@@ -6027,14 +6027,12 @@ zfs_stable_ioc_zfs_list(const char *fsname, nvlist_t *innvl,
 		if (dls_flags & DLS_TRAVERSE_SNAPSHOT)
 			dmu_flags |= DS_FIND_SNAPSHOTS;
 
-		ddobj = ds->ds_dir->dd_object;
-		dsl_dataset_rele(ds, FTAG);
-
-		/* XXX: Do we want to ignore this error? */
-		if (error == 0)
+		if (error == 0) {
+			ddobj = ds->ds_dir->dd_object;
+			dsl_dataset_rele(ds, FTAG);
 			(void) dmu_objset_getlist(dp, ddobj, dmu_flags, &tree,
 			    depth);
-
+		}
 		dsl_pool_config_exit(dp, FTAG);
 		if (error)
 			return (error);
