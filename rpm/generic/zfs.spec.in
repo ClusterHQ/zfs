@@ -253,6 +253,7 @@ exit 0
 %{_bindir}/*
 %{_libexecdir}/%{name}
 %{_mandir}/man1/*
+%{_mandir}/man3/*
 %{_mandir}/man5/*
 %{_mandir}/man8/*
 %{_udevdir}/vdev_id
