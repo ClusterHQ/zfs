@@ -133,13 +133,6 @@ zfs_callback(zfs_handle_t *zhp, void *data)
 	    ((cb->cb_flags & ZFS_ITER_DEPTH_LIMIT) == 0 ||
 	    cb->cb_depth < cb->cb_depth_limit)) {
 		cb->cb_depth++;
-		if (zfs_get_type(zhp) == ZFS_TYPE_FILESYSTEM)
-			(void) zfs_iter_filesystems(zhp, zfs_callback, data);
-		if (((zfs_get_type(zhp) & (ZFS_TYPE_SNAPSHOT |
-		    ZFS_TYPE_BOOKMARK)) == 0) && include_snaps)
-			(void) zfs_iter_snapshots(zhp,
-			    (cb->cb_flags & ZFS_ITER_SIMPLE) != 0, zfs_callback,
-			    data);
 		if (((zfs_get_type(zhp) & (ZFS_TYPE_SNAPSHOT |
 		    ZFS_TYPE_BOOKMARK)) == 0) && include_bmarks)
 			(void) zfs_iter_bookmarks(zhp, zfs_callback, data);
@@ -391,7 +384,7 @@ zfs_for_each(int argc, char **argv, int flags, zfs_type_t types,
 	 * XXX: We are phasing out the legacy recursive interface in
 	 * favor of the new stable list API.
 	 */
-	cb.cb_flags = flags & ~ZFS_ITER_RECURSE;
+	cb.cb_flags = flags;
 	cb.cb_proplist = proplist;
 	cb.cb_types = types;
 	cb.cb_depth_limit = limit;
@@ -471,8 +464,9 @@ zfs_for_each(int argc, char **argv, int flags, zfs_type_t types,
 			if (zhp != NULL)
 				ret |= zfs_iter_generic(zfs_get_handle(zhp),
 				    zfs_get_name(zhp), argtype, (flags &
-				    ZFS_ITER_DEPTH_LIMIT) ? limit : 0,
-				    zfs_callback, &cb);
+				    ZFS_ITER_DEPTH_LIMIT) ? limit : (flags &
+				    ZFS_ITER_RECURSE) ? -1 : 0, zfs_callback,
+				    &cb);
 			else
 				ret = 1;
 		}
