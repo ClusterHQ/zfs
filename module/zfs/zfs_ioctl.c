@@ -6393,8 +6393,8 @@ zfs_ioc_stable(zfs_cmd_t *zc)
 	if ((error = nvlist_lookup_string(mnvl, "cmd", &cmd)) != 0)
 		return (error);
 
-	if ((error = nvlist_lookup_nvlist(mnvl, "innvl", &innvl)) != 0)
-		return (error);
+	if (nvlist_lookup_nvlist(mnvl, "innvl", &innvl) != 0)
+		innvl = NULL;
 
 	if (nvlist_lookup_nvlist(mnvl, "opts", &opts) != 0)
 		opts = NULL;
