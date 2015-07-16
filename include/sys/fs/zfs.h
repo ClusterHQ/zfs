@@ -32,6 +32,7 @@
 #define	_SYS_FS_ZFS_H
 
 #include <sys/time.h>
+#include <sys/list.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -262,6 +263,16 @@ int zfs_prop_index_to_string(zfs_prop_t, uint64_t, const char **);
 int zfs_prop_string_to_index(zfs_prop_t, const char *, uint64_t *);
 uint64_t zfs_prop_random_value(zfs_prop_t, uint64_t seed);
 boolean_t zfs_prop_valid_for_type(int, zfs_type_t, boolean_t);
+
+struct dmu_tx;
+typedef struct dmu_tx dmu_tx_t;
+typedef void (*zprop_special_cb_f)(void *, dmu_tx_t *);
+
+typedef struct {
+	void *psc_data;			/* Caller data */
+	zprop_special_cb_f *psc_cb;	/* Callback function */
+	list_node_t psc_link;		/* Structure to manage things */
+} zprop_special_info_t;
 
 /*
  * Pool property functions shared between libzfs and kernel.

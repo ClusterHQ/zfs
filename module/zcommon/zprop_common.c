@@ -71,7 +71,8 @@ void
 zprop_register_impl(int prop, const char *name, zprop_type_t type,
     uint64_t numdefault, const char *strdefault, zprop_attr_t attr,
     int objset_types, const char *values, const char *colname,
-    boolean_t rightalign, boolean_t visible, const zprop_index_t *idx_tbl)
+    boolean_t rightalign, boolean_t visible, const zprop_index_t *idx_tbl,
+    zprop_special_f *special_cb)
 {
 	zprop_desc_t *prop_tbl = zprop_get_proptable(objset_types);
 	zprop_desc_t *pd;
@@ -95,6 +96,7 @@ zprop_register_impl(int prop, const char *name, zprop_type_t type,
 	pd->pd_visible = visible;
 	pd->pd_table = idx_tbl;
 	pd->pd_table_size = 0;
+	pd->pd_special = 0;
 	while (idx_tbl && (idx_tbl++)->pi_name != NULL)
 		pd->pd_table_size++;
 }
@@ -102,38 +104,42 @@ zprop_register_impl(int prop, const char *name, zprop_type_t type,
 void
 zprop_register_string(int prop, const char *name, const char *def,
     zprop_attr_t attr, int objset_types, const char *values,
-    const char *colname)
+    const char *colname, zprop_special_f *special_cb)
 {
 	zprop_register_impl(prop, name, PROP_TYPE_STRING, 0, def, attr,
-	    objset_types, values, colname, B_FALSE, B_TRUE, NULL);
+	    objset_types, values, colname, B_FALSE, B_TRUE, NULL, special_cb);
 
 }
 
 void
 zprop_register_number(int prop, const char *name, uint64_t def,
     zprop_attr_t attr, int objset_types, const char *values,
-    const char *colname)
+    const char *colname, zprop_special_f *special_cb)
 {
 	zprop_register_impl(prop, name, PROP_TYPE_NUMBER, def, NULL, attr,
-	    objset_types, values, colname, B_TRUE, B_TRUE, NULL);
+	    objset_types, values, colname, B_TRUE, B_TRUE, NULL,
+	    special_cb);
 }
 
 void
 zprop_register_index(int prop, const char *name, uint64_t def,
     zprop_attr_t attr, int objset_types, const char *values,
-    const char *colname, const zprop_index_t *idx_tbl)
+    const char *colname, const zprop_index_t *idx_tbl,
+    zprop_special_f *special_cb)
 {
 	zprop_register_impl(prop, name, PROP_TYPE_INDEX, def, NULL, attr,
-	    objset_types, values, colname, B_TRUE, B_TRUE, idx_tbl);
+	    objset_types, values, colname, B_TRUE, B_TRUE, idx_tbl,
+	    special_cb);
 }
 
 void
 zprop_register_hidden(int prop, const char *name, zprop_type_t type,
-    zprop_attr_t attr, int objset_types, const char *colname)
+    zprop_attr_t attr, int objset_types, const char *colname,
+    zprop_special_f *special_cb)
 {
 	zprop_register_impl(prop, name, type, 0, NULL, attr,
 	    objset_types, NULL, colname,
-	    type == PROP_TYPE_NUMBER, B_FALSE, NULL);
+	    type == PROP_TYPE_NUMBER, B_FALSE, NULL, special_cb);
 }
 
 

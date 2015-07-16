@@ -726,8 +726,30 @@ typedef struct dsl_props_set_arg {
 	const char *dpsa_dsname;
 	zprop_source_t dpsa_source;
 	nvlist_t *dpsa_props;
+	list_t dpsa_special_list;
 } dsl_props_set_arg_t;
 
+typedef struct dsl_props_special {
+	list_node_t	dps_node;
+	void *dps_data;
+	zprop_special_cb_f *dps_special_cb;
+} dsl_props_special_t;
+
+void dsl_props_special_list(list_t *l, dmu_tx_t *tx)
+{
+	dsl_props_special_t *dps, *old;
+
+	dps = list_head(l);
+	while (dps != NULL) {
+		(*dps->dps_special_cb)(dps->dps_data, tx);
+		list_remove(l, dps);
+		old = dps;
+		dps = list_next(l, dps);
+		kmem_free(old, sizeof(dsl_props_special_t));
+	}
+}
+
+/* free specials in error */
 static int
 dsl_props_set_check(void *arg, dmu_tx_t *tx)
 {
@@ -744,6 +766,7 @@ dsl_props_set_check(void *arg, dmu_tx_t *tx)
 
 	version = spa_version(ds->ds_dir->dd_pool->dp_spa);
 	while ((elem = nvlist_next_nvpair(dpsa->dpsa_props, elem)) != NULL) {
+		zfs_prop_t prop;
 		if (strlen(nvpair_name(elem)) >= ZAP_MAXNAMELEN) {
 			dsl_dataset_rele(ds, FTAG);
 			return (SET_ERROR(ENAMETOOLONG));
@@ -757,6 +780,26 @@ dsl_props_set_check(void *arg, dmu_tx_t *tx)
 				return (E2BIG);
 			}
 		}
+		prop = zfs_name_to_prop(nvpair_name(elem));
+		if (zfs_prop_special(prop)) {
+			dsl_props_set_info_t dpsi;
+			dsl_props_special_t *dps;
+
+			ASSERT(nvpair_type(elem) == DATA_TYPE_UINT64);
+
+			dpsi.dpsi_dsname = dpsa->dpsa_dsname;
+			dpsi.dpsi_source = dpsa->dpsa_source;
+			dpsi.dpsi_val = fnvpair_value_uint64(elem);
+
+			dps = kmem_alloc(sizeof (dsl_props_special_t), KM_SLEEP);
+			err = zfs_prop_call_special(prop, &dpsi, &dps->dps_data,
+			    &dps->dps_special_cb);
+			if (err)
+				return (err);
+
+			list_insert_tail(&dpsa->dpsa_special_list, dps);
+		}
+
 	}
 
 	if (dsl_dataset_is_snapshot(ds) && version < SPA_VERSION_SNAP_PROPS) {
@@ -810,6 +853,7 @@ dsl_props_set_sync(void *arg, dmu_tx_t *tx)
 	dsl_dataset_t *ds;
 
 	VERIFY0(dsl_dataset_hold(dp, dpsa->dpsa_dsname, FTAG, &ds));
+	dsl_props_special_list(&dpsa->dpsa_special_list, tx);
 	dsl_props_set_sync_impl(ds, dpsa->dpsa_source, dpsa->dpsa_props, tx);
 	dsl_dataset_rele(ds, FTAG);
 }
@@ -822,10 +866,13 @@ dsl_props_set(const char *dsname, zprop_source_t source, nvlist_t *props)
 {
 	dsl_props_set_arg_t dpsa;
 	int nblks = 0;
+	int ret;
 
 	dpsa.dpsa_dsname = dsname;
 	dpsa.dpsa_source = source;
 	dpsa.dpsa_props = props;
+	list_create(&dpsa.dpsa_special_list, sizeof (dsl_props_special_t),
+	    offsetof(dsl_props_special_t, dps_node));
 
 	/*
 	 * If the source includes NONE, then we will only be removing entries
@@ -834,8 +881,13 @@ dsl_props_set(const char *dsname, zprop_source_t source, nvlist_t *props)
 	if ((source & ZPROP_SRC_NONE) == 0)
 		nblks = 2 * fnvlist_num_pairs(props);
 
-	return (dsl_sync_task(dsname, dsl_props_set_check, dsl_props_set_sync,
-	    &dpsa, nblks));
+	ret = dsl_sync_task(dsname, dsl_props_set_check, dsl_props_set_sync,
+	    &dpsa, nblks);
+
+	dsl_props_special_list(&dpsa.dpsa_special_list, NULL);
+	list_destroy(&dpsa.dpsa_special_list);
+
+	return (ret);
 }
 
 typedef enum dsl_prop_getflags {

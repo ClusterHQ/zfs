@@ -61,6 +61,13 @@ typedef struct zfs_index {
 	uint64_t pi_value;
 } zprop_index_t;
 
+struct dmu_tx;
+typedef struct dmu_tx dmu_tx_t;
+
+typedef void (*zprop_special_cb_f)(void *, dmu_tx_t *);
+typedef int (*zprop_special_f)(zfs_prop_t, const void *, void **,
+    zprop_special_cb_f **);
+
 typedef struct {
 	const char *pd_name;		/* human-readable property name */
 	int pd_propnum;			/* property number */
@@ -78,6 +85,7 @@ typedef struct {
 	const zprop_index_t *pd_table;	/* for index properties, a table */
 					/* defining the possible values */
 	size_t pd_table_size;		/* number of entries in pd_table[] */
+	zprop_special_f *pd_special;	/* Special property callback */
 } zprop_desc_t;
 
 /*
@@ -87,6 +95,9 @@ void zfs_prop_init(void);
 zprop_type_t zfs_prop_get_type(zfs_prop_t);
 boolean_t zfs_prop_delegatable(zfs_prop_t prop);
 zprop_desc_t *zfs_prop_get_table(void);
+boolean_t zfs_prop_special(zfs_prop_t prop);
+int zfs_prop_call_special(zfs_prop_t prop, const void *data_in,
+    void **data_out, zprop_special_cb_f **);
 
 /*
  * zpool property functions
@@ -100,15 +111,15 @@ zprop_desc_t *zpool_prop_get_table(void);
  */
 void zprop_register_impl(int, const char *, zprop_type_t, uint64_t,
     const char *, zprop_attr_t, int, const char *, const char *,
-    boolean_t, boolean_t, const zprop_index_t *);
+    boolean_t, boolean_t, const zprop_index_t *, zprop_special_f *);
 void zprop_register_string(int, const char *, const char *,
-    zprop_attr_t attr, int, const char *, const char *);
+    zprop_attr_t attr, int, const char *, const char *, zprop_special_f *);
 void zprop_register_number(int, const char *, uint64_t, zprop_attr_t, int,
-    const char *, const char *);
+    const char *, const char *, zprop_special_f *);
 void zprop_register_index(int, const char *, uint64_t, zprop_attr_t, int,
-    const char *, const char *, const zprop_index_t *);
+    const char *, const char *, const zprop_index_t *, zprop_special_f *);
 void zprop_register_hidden(int, const char *, zprop_type_t, zprop_attr_t,
-    int, const char *);
+    int, const char *, zprop_special_f *);
 
 /*
  * Common routines for zfs and zpool property management

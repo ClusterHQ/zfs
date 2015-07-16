@@ -54,6 +54,12 @@ typedef struct dsl_props_arg {
 	zprop_source_t pa_source;
 } dsl_props_arg_t;
 
+typedef struct dsl_props_sync_info {
+	const char *dpsi_dsname;
+	zprop_source_t dpsi_source;
+	uint64_t dpsi_val;
+} dsl_props_set_info_t;
+
 int dsl_prop_register(struct dsl_dataset *ds, const char *propname,
     dsl_prop_changed_cb_t *callback, void *cbarg);
 int dsl_prop_unregister(struct dsl_dataset *ds, const char *propname,
