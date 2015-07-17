@@ -1644,7 +1644,7 @@ dmu_objset_getlist(dsl_pool_t *dp, uint64_t ddobj, int flags,
 	/*
 	 * Iterate over all snapshots.
 	 */
-	if (depth > 1 && (flags & DS_FIND_SNAPSHOTS)) {
+	if (depth >= 1 && (flags & DS_FIND_SNAPSHOTS)) {
 		dsl_dataset_t *ds = parent->dol_ds;
 
 		if (err == 0) {
