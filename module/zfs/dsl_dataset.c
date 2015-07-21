@@ -1578,9 +1578,9 @@ dsl_dataset_rename_snapshot_check_impl(dsl_pool_t *dp,
 	uint64_t val;
 
 	error = dsl_dataset_snap_lookup(hds, ddrsa->ddrsa_oldsnapname, &val);
-	if (error != 0) {
-		/* ignore nonexistent snapshots */
-		return (error == ENOENT ? 0 : error);
+	/* ignore nonexistent snapshots */
+	if (error != 0 || error != ENOENT) {
+		return (error);
 	}
 
 	/* new name should not exist */
