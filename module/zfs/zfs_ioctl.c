@@ -2411,18 +2411,6 @@ zfs_prop_set_special(const char *dsname, zprop_source_t source,
 	VERIFY(0 == nvpair_value_uint64(pair, &intval));
 
 	switch (prop) {
-	case ZFS_PROP_QUOTA:
-		err = dsl_dir_set_quota(dsname, source, intval);
-		break;
-	case ZFS_PROP_REFQUOTA:
-		err = dsl_dataset_set_refquota(dsname, source, intval);
-		break;
-	case ZFS_PROP_RESERVATION:
-		err = dsl_dir_set_reservation(dsname, source, intval);
-		break;
-	case ZFS_PROP_REFRESERVATION:
-		err = dsl_dataset_set_refreservation(dsname, source, intval);
-		break;
 	case ZFS_PROP_VOLSIZE:
 		err = zvol_set_volsize(dsname, intval);
 		break;
