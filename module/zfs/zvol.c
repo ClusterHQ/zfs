@@ -904,10 +904,8 @@ static int
 zvol_first_open(zvol_state_t *zv)
 {
 	objset_t *os;
-	uint64_t volsize;
 	int locked = 0;
 	int error;
-	uint64_t ro;
 
 	/*
 	 * In all other cases the spa_namespace_lock is taken before the
@@ -932,20 +930,10 @@ zvol_first_open(zvol_state_t *zv)
 			return (-SET_ERROR(ERESTARTSYS));
 	}
 
-	error = dsl_prop_get_integer(zv->zv_name, "readonly", &ro, NULL);
-	if (error)
-		goto out_mutex;
-
 	/* lie and say we're read-only */
 	error = dmu_objset_own(zv->zv_name, DMU_OST_ZVOL, 1, zvol_tag, &os);
 	if (error)
 		goto out_mutex;
-
-	error = zap_lookup(os, ZVOL_ZAP_OBJ, "size", 8, 1, &volsize);
-	if (error) {
-		dmu_objset_disown(os, zvol_tag);
-		goto out_mutex;
-	}
 
 	zv->zv_objset = os;
 	error = dmu_bonus_hold(os, ZVOL_OBJ, zvol_tag, &zv->zv_dbuf);
@@ -954,18 +942,7 @@ zvol_first_open(zvol_state_t *zv)
 		goto out_mutex;
 	}
 
-	set_capacity(zv->zv_disk, volsize >> 9);
-	zv->zv_volsize = volsize;
 	zv->zv_zilog = zil_open(os, zvol_get_data);
-
-	if (ro || dmu_objset_is_snapshot(os) ||
-	    !spa_writeable(dmu_objset_spa(os))) {
-		set_disk_ro(zv->zv_disk, 1);
-		zv->zv_flags |= ZVOL_RDONLY;
-	} else {
-		set_disk_ro(zv->zv_disk, 0);
-		zv->zv_flags &= ~ZVOL_RDONLY;
-	}
 
 out_mutex:
 	if (locked)
@@ -1340,6 +1317,7 @@ __zvol_create_minor(const char *name, boolean_t ignore_snapdev)
 	dmu_object_info_t *doi;
 	uint64_t volsize;
 	unsigned minor = 0;
+	uint64_t ro;
 	int error = 0;
 
 	ASSERT(MUTEX_HELD(&zvol_state_lock));
@@ -1374,6 +1352,10 @@ __zvol_create_minor(const char *name, boolean_t ignore_snapdev)
 	if (error)
 		goto out_dmu_objset_disown;
 
+	error = dsl_prop_get_int_ds(os->os_dsl_dataset,  "readonly", &ro);
+	if (error)
+		goto out_dmu_objset_disown;
+
 	zv = zvol_alloc(MKDEV(zvol_major, minor), name);
 	if (zv == NULL) {
 		error = SET_ERROR(EAGAIN);
@@ -1403,6 +1385,15 @@ __zvol_create_minor(const char *name, boolean_t ignore_snapdev)
 #ifdef HAVE_BLK_QUEUE_NONROT
 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, zv->zv_queue);
 #endif
+
+	if (ro || dmu_objset_is_snapshot(os) ||
+	    !spa_writeable(dmu_objset_spa(os))) {
+		set_disk_ro(zv->zv_disk, 1);
+		zv->zv_flags |= ZVOL_RDONLY;
+	} else {
+		set_disk_ro(zv->zv_disk, 0);
+		zv->zv_flags &= ~ZVOL_RDONLY;
+	}
 
 	if (spa_writeable(dmu_objset_spa(os))) {
 		if (zil_replay_disable)
