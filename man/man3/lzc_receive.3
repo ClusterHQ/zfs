@@ -84,7 +84,6 @@ should never be set as being non-blocking.
 Checksum failure in stream.
 .RE
 
-
 .sp
 .ne 2
 .na
@@ -93,6 +92,16 @@ Checksum failure in stream.
 .RS 13n
 The file descriptor \fIfd\fR is invalid.
 .RE
+
+.sp
+.ne 2
+.na
+\fB\fBEBUSY\fR\fR
+.ad
+.RS 13n
+The \fIorigin\fR has a long hold (i.e. it is mounted).
+.RE
+
 
 .sp
 .ne 2
@@ -140,6 +149,10 @@ The call was interrupted by a userspace signal.
 .ad
 .RS 13n
 The string \fIsnapname\fR is not a valid bookmark or snapshot name.
+.sp
+The \fIorigin\fR is specified, but \fIorigin\fR and \fIsnapname\fR are not both snapshots.
+.sp
+
 .RE
 
 .sp
@@ -187,11 +200,32 @@ Failed to allocate memory necessary to send \fIparams\fR to the kernel.
 .sp
 .ne 2
 .na
+\fB\fBENOSPC\fR\fR
+.ad
+.RS 13n
+The pool is out of space.
+.sp
+The inherited quotas and reservations do not allow for more space to be used.
+.RE
+
+.sp
+.ne 2
+.na
 \fB\fBEPERM\fR\fR
 .ad
 .RS 13n
 Permission denied by zone security policy.
 .RE
+
+.sp
+.ne 2
+.na
+\fB\fBETXTBSY\fR\fR
+.ad
+.RS 13n
+The force flag has not been set, but the dataset belonging to \fRsnapname\fI has been modified.
+.RE
+
 
 .SH BUGS
 File descriptors with O_NONBLOCK do not fail immediately.
