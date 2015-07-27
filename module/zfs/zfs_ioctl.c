@@ -2316,7 +2316,7 @@ dataset_name_hidden(const char *name)
 	return (B_FALSE);
 }
 
-typedef struct zfs_list_t {
+typedef struct zfs_list {
 	char *zl_name;
 	uint64_t zl_cookie;
 	uint64_t zl_obj;
