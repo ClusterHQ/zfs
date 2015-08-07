@@ -735,18 +735,22 @@ dsl_props_set_special_check(dsl_dataset_t *ds, zprop_source_t source,
 	const char *propname = nvpair_name(pair);
 	zfs_prop_t prop = zfs_name_to_prop(propname);
 	uint64_t intval;
+	char *strval;
 	int err = 0;
 
-	if (((nvpair_type(pair) == DATA_TYPE_STRING) &&
-	    (zfs_prop_get_type(prop) == PROP_TYPE_INDEX))) {
-		char *strval;
+	switch (nvpair_type(pair)) {
+	case DATA_TYPE_STRING:
 		if (nvpair_value_string(pair, &strval) != 0)
-			return (-1);
-		if (zfs_prop_string_to_index(prop, strval, &intval) != 0)
-			return (-1);
-	} else
+			return (SET_ERROR(EINVAL));
+		if (zfs_prop_get_type(prop) == PROP_TYPE_INDEX &&
+		     zfs_prop_string_to_index(prop, strval, &intval) != 0)
+				return (SET_ERROR(EINVAL));
+		break;
+	case DATA_TYPE_UINT64:
 		VERIFY(0 == nvpair_value_uint64(pair, &intval));
-
+	default:
+		break;
+	}
 
 	switch (prop) {
 	case ZFS_PROP_QUOTA:
