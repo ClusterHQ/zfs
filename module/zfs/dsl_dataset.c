@@ -1922,12 +1922,14 @@ dsl_dataset_promote_check(void *arg, dmu_tx_t *tx)
 	dsl_dataset_t *origin_ds;
 	int err;
 	uint64_t unused;
+	size_t max_snap_len;
 
 	err = promote_hold(ddpa, dp, FTAG);
 	if (err != 0)
 		return (err);
 
 	hds = ddpa->ddpa_clone;
+	max_snap_len = MAXNAMELEN - strlen(ddpa->ddpa_clonename) - 1;
 
 	if (hds->ds_phys->ds_flags & DS_FLAG_NOPROMOTE) {
 		promote_rele(ddpa, FTAG);
@@ -1987,6 +1989,10 @@ dsl_dataset_promote_check(void *arg, dmu_tx_t *tx)
 
 		/* Check that the snapshot name does not conflict */
 		VERIFY0(dsl_dataset_get_snapname(ds));
+		if (strlen(ds->ds_snapname) >= max_snap_len) {
+			err = SET_ERROR(ENAMETOOLONG);
+			goto out;
+		}
 		err = dsl_dataset_snap_lookup(hds, ds->ds_snapname, &val);
 		if (err == 0) {
 			(void) strcpy(ddpa->err_ds, snap->ds->ds_snapname);
