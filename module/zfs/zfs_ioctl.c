@@ -1390,7 +1390,8 @@ put_nvlist(zfs_cmd_t *zc, nvlist_t *nvl)
 	}
 
 	zc->zc_nvlist_dst_size = size;
-	zc->zc_nvlist_dst_filled = B_TRUE;
+	if (error == 0)
+		zc->zc_nvlist_dst_filled = B_TRUE;
 	return (error);
 }
 
