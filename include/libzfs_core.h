@@ -66,9 +66,14 @@ enum lzc_send_flags {
 };
 
 int lzc_send(const char *, const char *, int, enum lzc_send_flags);
-int lzc_receive(const char *, nvlist_t *, const char *, boolean_t, int);
 int lzc_send_space(const char *, const char *, uint64_t *);
 int lzc_send_progress(const char *, int, uint64_t *);
+
+struct dmu_replay_record;
+
+int lzc_receive(const char *, nvlist_t *, const char *, boolean_t, int);
+int lzc_receive_with_header(const char *, nvlist_t *, const char *, boolean_t,
+    boolean_t, int, const struct dmu_replay_record *);
 
 boolean_t lzc_exists(const char *);
 
