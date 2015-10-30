@@ -37,16 +37,16 @@ lzc_snaprange_space \- Determine how much space is used by a snapshot range.
 
 .SH DESCRIPTION
 .LP
-The
-\fBlzc_snaprange_space\fR()
-function calculates how much space in bytes the differences between
-\fIfirstsnap\fR and \fIlastsnap\fR use in the pool. They must be snapshots of
-the same dataset.
+The \fBlzc_snaprange_space\fR() function calculates how much space in bytes the differences between \fIfirstsnap\fR and \fIlastsnap\fR use in the pool.
+They must be snapshots of the same dataset.
+.sp
+The used space calculated is stored in \fI*usedp\fR.
 
 .SH RETURN VALUES
 .sp
 .LP
-Upon successful completion, 0 is returned. Otherwise, an error is returned.
+Upon successful completion, 0 is returned.
+Otherwise, an error is returned.
 .SH ERRORS
 .sp
 .LP
@@ -92,11 +92,9 @@ The string \fIlastsnap\fR exceeds 256 characters.
 .RS 13n
 Pool does not exist.
 .sp
-Loadng unitialized pool from cachefile failed because the pool was exported or
-destroyed.
+Loadng uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
-Internal error where uninitialized pool lacks a GUID in its config that was
-read from the cachefile.
+Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .sp
 The snapshot \fIfirstsnap\fR does not exist.
 .sp
@@ -122,10 +120,9 @@ Permission denied by zone security policy.
 
 .SH BUGS
 .LP
-Early implementations of the API will return \fB\fBENOENT\fR\fR instead of
-\fB\fBEXDEV\fR\fR. The same implementations would also segfault in
-\fBlzc_snaprange_space()\fR when \fI*usedp\fR was NULL. These issues were
-rectified when the man page was written. 
+Early implementations of the API will return \fB\fBENOENT\fR\fR instead of \fB\fBEXDEV\fR\fR.
+The same implementations would also segfault in \fBlzc_snaprange_space()\fR when \fI*usedp\fR was NULL.
+These issues were rectified when the man page was written.
 
 .SH SEE ALSO
 .sp

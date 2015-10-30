@@ -74,12 +74,42 @@ fnvlist_size(nvlist_t *nvl)
  * fnvlist_pack_free().
  */
 char *
-fnvlist_pack(nvlist_t *nvl, size_t *sizep)
+fnvlist_pack_enc(nvlist_t *nvl, size_t *sizep, int encoding)
 {
 	char *packed = 0;
-	VERIFY3U(nvlist_pack(nvl, &packed, sizep, NV_ENCODE_NATIVE,
+	VERIFY3U(nvlist_pack(nvl, &packed, sizep, encoding,
 	    KM_SLEEP), ==, 0);
 	return (packed);
+}
+
+/*
+ * Returns allocated buffer of size *sizep.  Caller must free the buffer with
+ * fnvlist_pack_free(). Allocated buffer is native encoded.
+ */
+char *
+fnvlist_pack_native(nvlist_t *nvl, size_t *sizep)
+{
+	return fnvlist_pack_enc(nvl, sizep, NV_ENCODE_NATIVE);
+}
+
+/*
+ * Returns allocated buffer of size *sizep.  Caller must free the buffer with
+ * fnvlist_pack_free(). Allocated buffer is XDR encoded.
+ */
+char *
+fnvlist_pack_xdr(nvlist_t *nvl, size_t *sizep)
+{
+	return fnvlist_pack_enc(nvl, sizep, NV_ENCODE_XDR);
+}
+
+/*
+ * Returns allocated buffer of size *sizep.  Caller must free the buffer with
+ * fnvlist_pack_free(). An alias for fnvlist_pacn_native.
+ */
+char *
+fnvlist_pack(nvlist_t *nvl, size_t *sizep)
+{
+	return fnvlist_pack_native(nvl, sizep);
 }
 
 /*ARGSUSED*/
@@ -513,6 +543,9 @@ fnvpair_value_nvlist(nvpair_t *nvp)
 EXPORT_SYMBOL(fnvlist_alloc);
 EXPORT_SYMBOL(fnvlist_free);
 EXPORT_SYMBOL(fnvlist_size);
+EXPORT_SYMBOL(fnvlist_pack_enc);
+EXPORT_SYMBOL(fnvlist_pack_native);
+EXPORT_SYMBOL(fnvlist_pack_xdr);
 EXPORT_SYMBOL(fnvlist_pack);
 EXPORT_SYMBOL(fnvlist_pack_free);
 EXPORT_SYMBOL(fnvlist_unpack);

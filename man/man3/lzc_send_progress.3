@@ -37,9 +37,7 @@ lzc_send_progress \- Query bytes written to fd by active send stream
 
 .SH DESCRIPTION
 .LP
-The
-\fBlzc_send_progress\fR()
-function returns how many bytes have been written by send stream to \fIfd\fR.
+The \fBlzc_send_progress\fR() function returns how many bytes have been written by send stream to \fIfd\fR.
 
 .SH RETURN VALUES
 .sp
@@ -85,15 +83,13 @@ The string \fIsnapname\fR exceeds 256 characters.
 .RS 13n
 Pool does not exist.
 .sp
-Loadng unitialized pool from cachefile failed because the pool was exported or
-destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
-Internal error where uninitialized pool lacks a GUID in its config that was
-read from the cachefile.
+Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .sp
 The snapshot \fIsnapname\fR does not exist.
 .sp
-No active send stream was found that maches \fIfd\fR and \fIsnapname\fR
+No active send stream was found that matches \fIfd\fR and \fIsnapname\fR
 .RE
 
 .sp

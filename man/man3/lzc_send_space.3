@@ -33,13 +33,11 @@ This manual page is part of the OpenZFS Programmer's Manual.
 \fBint\fR \fBlzc_send_space\fR(\fBconst char *\fR\fIsnapname\fR, \fBconst char *\fR\fIfrom\fR, \fBuint64_t *\fR\fIspacep\fR);
 
 .SH NAME
-lzc_send_space \- Calculates approximately how many bytes would be written by
-lzc_send().
+lzc_send_space \- Calculates approximately how many bytes would be written by lzc_send().
 
 .SH DESCRIPTION
 .LP
-The \fBlzc_send_space\fR() function calculates approximately how many bytes
-would be written by lzc_send().
+The \fBlzc_send_space\fR() function calculates approximately how many bytes would be written by lzc_send().
 
 If \fIfrom\fR is NULL, the space for a non-incremental stream is calculated.
 Calculations for deduplicated streams are not supported.
@@ -90,11 +88,9 @@ The string \fIfrom\fR exceeds 256 characters.
 .RS 13n
 Pool does not exist.
 .sp
-Loadng unitialized pool from cachefile failed because the pool was exported or
-destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
-Internal error where uninitialized pool lacks a GUID in its config that was
-read from the cachefile.
+Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .sp
 The snapshot \fIsnapname\fR does not exist.
 .sp
@@ -118,7 +114,8 @@ Permission denied by zone security policy.
 .RS 13n
 The snapshot \fIfrom\fR is not an earlier snapshot than the snapshot \fIsnapname\fR.
 .sp
-The snapshot \fIfrom\fR and the snapshot \fIsnapname\fR are not snapshots of the same dataset. Alternatively, they are not of the same pool.
+The snapshot \fIfrom\fR and the snapshot \fIsnapname\fR are not snapshots of the same dataset.
+Alternatively, they are not of the same pool.
 .RE
 
 .SH SEE ALSO

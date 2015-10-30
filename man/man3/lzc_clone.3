@@ -30,26 +30,25 @@ This manual page is part of the OpenZFS Programmer's Manual.
 .SH SYNOPSIS
 #include <libzfs_core.h>
 
-\fBint\fR \fBlzc_clone\fR(\fBconst char *\fR\fIfsname\fR, \fBconst char *\fR \fIorigin\fR, \fBnvlist_t *\fR\fIprops\fR);
+\fBint\fR \fBlzc_clone\fR(\fBconst char *\fR\fIfsname\fR, \fBconst char *\fR\fIorigin\fR, \fBnvlist_t *\fR\fIprops\fR);
 
 .SH NAME
 lzc_clone \- Creates a clone from a snapshot
 
 .SH DESCRIPTION
 .LP
-The
-\fBlibzfs_clone\fR()
-function creates a ZFS dataset or volume named
+The \fBlzc_clone\fR() function creates a ZFS dataset or volume named
 .I fsname
 from the snapshot
-.fs origin .
+.I origin\fR.
 Properties may optionally be set using
-.I props .
+.I props\fR.
 
 .SH RETURN VALUES
 .sp
 .LP
-Upon successful completion, 0 is returned. Otherwise, an error is returned.
+Upon successful completion, 0 is returned.
+Otherwise, an error is returned.
 .SH ERRORS
 .sp
 .LP
@@ -60,8 +59,7 @@ The \fBlzc_clone()\fR function will fail if:
 \fB\fBEDQUOT\fR\fR
 .ad
 .RS 13n
-Creation of the clone will require storage space in excess of the filesystem
-quota.
+Creation of the clone will require storage space in excess of the filesystem quota.
 .RE
 
 .sp
@@ -81,9 +79,11 @@ A dataset named \fIfsname\fR already exists.
 \fB\fBEINVAL\fR\fR
 .ad
 .RS 13n
-The dataset name \fIfsname\fR is not syntactically correct. This includes situations where bookmarks, snapshots or holds are specified.
+The dataset name \fIfsname\fR is not syntactically correct.
+This includes situations where bookmarks, snapshots or holds are specified.
 .sp
-The snapshot name \fIorigin\fR is not syntactically correct. This includes the case of attempting to clone a non-snapshot.
+The snapshot name \fIorigin\fR is not syntactically correct.
+This includes the case of attempting to clone a non-snapshot.
 .sp
 The nvlist_t \fIprops\fR could not be understood by the kernel as being NULL or a nvlist.
 .RE
@@ -96,7 +96,7 @@ The nvlist_t \fIprops\fR could not be understood by the kernel as being NULL or 
 .RS 13n
 The dataset name \fIfsname\fR exceeds 256 characters.
 .sp
-The snapshot name \fIorigin\fR nvlist exceeds 256 characters.
+The snapshot name \fIorigin\fR exceeds 256 characters.
 .RE
 
 .sp
@@ -107,7 +107,7 @@ The snapshot name \fIorigin\fR nvlist exceeds 256 characters.
 .RS 13n
 Pool does not exist.
 .sp
-Loadng unitialized pool from cachefile failed because the pool was exported or destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
 The dataset \fIfsname\fR does not exist.
 .RE

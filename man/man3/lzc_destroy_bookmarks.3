@@ -37,12 +37,10 @@ lzc_destroy_bookmarks \- Destroys bookmarks
 
 .SH DESCRIPTION
 .LP
-The \fBlzc_destroy_bookmarks\fR() function shall atomically destroy bookmarks
-specified within a pool. The pool is determined implicitly from the list of
-bookmarks. If \fIerrlist\fR is specified and destruction of a bookmark fails
-(e.g. specified name too long), it will be allocated and updated to contain a
-list of bookmarks where the operation failed. The keys of the list will be the
-full bookmark names while the values will be int32 error codes.
+The \fBlzc_destroy_bookmarks\fR() function shall atomically destroy bookmarks specified within a pool.
+The pool is determined implicitly from the list of bookmarks.
+If \fIerrlist\fR is specified and destruction of a bookmark fails (e.g. specified name too long), it will be allocated and updated to contain a list of bookmarks where the operation failed.
+The keys of the list will be the full bookmark names while the values will be int32 error codes.
 .sp
 Bookmarks that do not exist will be silently ignored.
 
@@ -51,11 +49,9 @@ Bookmarks that do not exist will be silently ignored.
 .LP
 Upon successful completion, 0 is returned.
 .sp
-On error, an error is returned from one of the bookmarks where an error
-occurred and \fIerrlist\fR is populated with more specific information if a
-pointer is provided. \fIerrlist\fR shall contain keys with the snapshot names
-and int32 values of the error codes. The caller must call \fBnvlist_free\fR()
-on \fIerrlist\fR if this occurs.
+On error, an error is returned from one of the bookmarks where an error occurred and \fIerrlist\fR is populated with more specific information if a pointer is provided.
+\fIerrlist\fR shall contain keys with the snapshot names and int32 values of the error codes.
+The caller must call \fBnvlist_free\fR(\fI*errlist\fR) when this occurs.
 .SH ERRORS
 .sp
 .LP
@@ -75,7 +71,7 @@ The pool was uninitialized and a pool with the same GUID already existed.
 \fB\fBEINVAL\fR\fR
 .ad
 .RS 13n
-Invalid boomark name specified in \fIbmarks\fR.
+Invalid bookmark name specified in \fIbmarks\fR.
 .RE
 
 .sp
@@ -95,7 +91,7 @@ Bookmark name specified in \fIbmarks\fR is too long.
 .RS 13n
 Pool does not exist.
 .sp
-Loading unitialized pool from cachefile failed because the pool was exported or destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
 Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .RE

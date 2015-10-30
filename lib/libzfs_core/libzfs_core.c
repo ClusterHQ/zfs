@@ -130,7 +130,7 @@ lzc_ioctl_impl(zfs_ioc_t ioc, const char *name,
 	if (name)
 		(void) strlcpy(zc.zc_name, name, sizeof (zc.zc_name));
 
-	packed = fnvlist_pack(source, &size);
+	packed = fnvlist_pack_xdr(source, &size);
 	zc.zc_nvlist_src = (uint64_t)(uintptr_t)packed;
 	zc.zc_nvlist_src_size = size;
 

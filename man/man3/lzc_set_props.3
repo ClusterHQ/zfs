@@ -43,16 +43,15 @@ The \fBlzc_set_props\fR() function will set properties on a given dataset or vol
 is a string containing the name of a dataset or filesystem.
 .sp
 .I props
-is a nvlist containing the properties to set. See \fBzfs\fR(8) for descriptions
-of properties.
+is a nvlist containing the properties to set.
+See \fBzfs\fR(8) for descriptions of properties.
 .sp
 .I opts
 is a nvlist containing additional options to pass to this command.
 .sp
-The \fIprops\fR parameter is an nvlist of property names
-(with no values) that will be returned for each bookmark. The \fIbmarks\fR
-parameter is a pointer to a nvlist of the bookmarks. The caller is responsible
-for freeing it with \fBnvlist_free\fR().
+The \fIprops\fR parameter is an nvlist of property names (with no values) that will be returned for each bookmark.
+The \fIbmarks\fR parameter is a pointer to a nvlist of the bookmarks.
+The caller is responsible for freeing it with \fBnvlist_free\fR(\fI*bmarks\fR).
 
 The format of the returned nvlist as follows:
 .P
@@ -63,8 +62,8 @@ The format of the returned nvlist as follows:
 .br
 }
 
-The following are valid properties on bookmarks. All of them are uint64 values
-in the nvlist:
+The following are valid properties on bookmarks.
+All of them are uint64 values in the nvlist:
 .sp
 .na
 \fB\fBguid\fR\fR
@@ -95,7 +94,8 @@ A boolean property that specifies that the properties being set were received fr
 tells the kernel to handle failures by setting all properties that do not fail.
 This is necessary when setting old-style special properties.
 .sp
-There are 9 old-style special properties that cannot be set atomically with the others. They are:
+There are 9 old-style special properties that cannot be set atomically with the others.
+They are:
 .sp
 filesystem_limit
 .sp
@@ -120,7 +120,8 @@ Unsupported properties will be silently ignored.
 .SH RETURN VALUES
 .sp
 .LP
-Upon successful completion, 0 is returned and all properties have been set. Otherwise, an error is returned.
+Upon successful completion, 0 is returned and all properties have been set.
+Otherwise, an error is returned.
 
 .SH ERRORS
 .sp
@@ -163,7 +164,7 @@ The dataset name \fIfsname\fR exceeds 256 characters.
 .RS 13n
 Pool does not exist.
 .sp
-Loading unitialized pool from cachefile failed because the pool was exported or destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
 Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .sp
@@ -203,7 +204,8 @@ An old-style special property was specified without "noatomic" in \fBopts\fR.
 \fB\fBESRCH\fR\fR
 .ad
 .RS 13n
-A specified, but valid, bookmark was not found. This merits a bug report.
+A specified, but valid, bookmark was not found.
+This merits a bug report.
 .RE
 
 .SH SEE ALSO

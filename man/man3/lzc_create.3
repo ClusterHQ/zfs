@@ -37,20 +37,19 @@ lzc_create \- Create a ZFS dataset or volume
 
 .SH DESCRIPTION
 .LP
-The
-\fBlibzfs_create\fR()
-function creates a dataset or zvol according to \fItype\fR. Optional properties
-are passed through \fIprops\fR.
+The \fBlzc_create\fR() function creates a dataset or zvol according to \fItype\fR.
+Optional properties are passed through \fIprops\fR.
 
 .SH RETURN VALUES
 .sp
 .LP
-Upon successful completion, 0 is returned. Otherwise, an error is returned.
+Upon successful completion, 0 is returned.
+Otherwise, an error is returned.
 
 .SH ERRORS
 .sp
 .LP
-The \fBlzc_inherit()\fR function will fail if:
+The \fBlzc_create()\fR function will fail if:
 .sp
 .ne 2
 .na
@@ -90,7 +89,7 @@ The dataset name \fIfsname\fR exceeds 256 characters.
 .RS 13n
 Pool does not exist.
 .sp
-Loading unitialized pool from cachefile failed because the pool was exported or destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
 Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .sp
@@ -114,7 +113,7 @@ Failed to allocate memory necessary to send \fIprops\fR to the kernel.
 .RS 13n
 The requested ZPL version is not supported.
 .sp
-A feature has been requested (e.g. normalization) that hte requested ZPL version doe sont support.
+A feature has been requested (e.g. normalization) that the requested ZPL version does not support.
 .RE
 
 .sp

@@ -33,15 +33,14 @@ This manual page is part of the OpenZFS Programmer's Manual.
 \fBint\fR \fBlzc_rename\fR(\fBconst char *\fR\fIoldname\fR, \fBchar *\fR\fInewname\fR, \fBnvlist_t *\fR\fIopts\fR, \fBchar **\fR\fIerrname\fR);
 
 .SH NAME
-lzc_rename \- Rollback this filesystem or volume to its most recent snapshot. 
+lzc_rename \- Rollback this filesystem or volume to its most recent snapshot.
 
 .SH DESCRIPTION
 .LP
-The \fBlibzfs_rename\fR() function will rename a dataset, volume or snapshot. 
+The \fBlibzfs_rename\fR() function will rename a dataset, volume or snapshot.
 
-For legacy purposes, it will make an attempt to unmount the dataset, volume or
-snapsot before a rename is done. To ensure atomicity, userland should unmount
-the dataset, volume or snapshot before calling this.
+For legacy purposes, it will make an attempt to unmount the dataset, volume or snapshot before a rename is done.
+To ensure atomicity, userland should unmount the dataset, volume or snapshot before calling this.
 
 .I oldname
 shall be the name of the current dataset.
@@ -50,23 +49,24 @@ shall be the name of the current dataset.
 shall be the new name of the dataset.
 
 .I opts
-shall be an nvlist_t that allows changes to the behavior. The only option
-accepted at this time is the boolean "recursive" key. That will rename
-snapshots of child datasets. This is intended to complement
-\fBlzc_snapshot\fR() when multiple snapshots are made with the same name.
+shall be an nvlist_t that allows changes to the behavior.
+The only option accepted at this time is the boolean "recursive" key.
+That will rename snapshots of child datasets.
+This is intended to complement \fBlzc_snapshot\fR() when multiple snapshots are made with the same name.
 
 .I errname
-shall be a pointer to a string pointer. It can be NULL. It is only used when an
-error occurs when renaming snapshots recursively.
+shall be a pointer to a string pointer.
+It can be NULL.
+It is only used when an error occurs when renaming snapshots recursively.
 
 .SH RETURN VALUES
 .sp
 .LP
-Upon successful completion, 0 is returned. Otherwise, an error is returned.
+Upon successful completion, 0 is returned.
+Otherwise, an error is returned.
 
-If an error occurs on a recursive snapshot rename and \fIerrname\fR is
-non-NULL, a strdup()-allocated string wll be returned via \fIerrname\fR. The
-caller must free it with \fBstrfree\fR().
+If an error occurs on a recursive snapshot rename and \fIerrname\fR is non-NULL, a strdup()-allocated string will be returned via \fIerrname\fR.
+The caller must free it with \fBstrfree\fR().
 
 .SH ERRORS
 .sp
@@ -96,12 +96,11 @@ The pool was uninitialized and a pool with the same GUID already existed.
 \fB\fBENAMETOOLONG\fR\fR
 .ad
 .RS 13n
-The string \fIfsname\fR exceeds 256 characters.
+The string \fIoldname\fR exceeds 256 characters.
 .sp
 The string \fInewname\fR exceeds 256 characters.
 .sp
-The new name of a recursively renamed child snapshot would exceed 256
-characters.
+The new name of a recursively renamed child snapshot would exceed 256 characters.
 .RE
 
 .sp
@@ -112,7 +111,7 @@ characters.
 .RS 13n
 Pool does not exist.
 .sp
-Loading unitialized pool from cachefile failed because the pool was exported or destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
 Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .RE

@@ -37,15 +37,13 @@ lzc_inherit \- Reset dataset property to default value
 
 .SH DESCRIPTION
 .LP
-The
-\fBlzc_inherit\fR()
-function shall atomically reset property \fIpropname\fR of dataset
-\fIfsname\fR.
+The \fBlzc_inherit\fR() function shall atomically reset property \fIpropname\fR of dataset \fIfsname\fR.
 
 .SH RETURN VALUES
 .sp
 .LP
-Upon successful completion, 0 is returned. Otherwise, an error is returned.
+Upon successful completion, 0 is returned.
+Otherwise, an error is returned.
 .SH ERRORS
 .sp
 .LP
@@ -96,7 +94,7 @@ Failed to allocate memory necessary to send \fIopts\fR to the kernel.
 .RS 13n
 Pool does not exist.
 .sp
-Loading unitialized pool from cachefile failed because the pool was exported or destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
 Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .sp

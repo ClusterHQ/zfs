@@ -38,24 +38,22 @@ lzc_destroy_one \- Destroys a dataset or volume
 .SH DESCRIPTION
 .LP
 The \fBlzc_destroy_one\fR() function shall destroys a dataset or a volume.
-Destroying snapshots and bookmarks is not currently supported. Call
-lzc_destroy_snaps and lzc_destroy_bookmarks for those respectively.
+Destroying snapshots and bookmarks is not currently supported.
+Call lzc_destroy_snaps and lzc_destroy_bookmarks for those respectively.
 
-The only currently valid property is the boolean "defer". It makes destruction
-asynchronous such that the only error code back is if we try to destroy
-something that does not exist. The caller must unmount the dataset before
-calling this. Otherwise, it will fail.
+The only currently valid property is the boolean "defer".
+It makes destruction asynchronous such that the only error code returned is when attempting to destroy something that does not exist.
+The caller must unmount the dataset before calling this.
+Otherwise, it will fail.
 
 .SH RETURN VALUES
 .sp
 .LP
 Upon successful completion, 0 is returned.
 .sp
-On error, an error is returned from one of the bookmarks where an error
-occurred and \fIerrlist\fR is populated with more specific information if a
-pointer is provided. \fIerrlist\fR shall contain keys with the snapshot names
-and int32 values of the error codes. The caller must call \fBnvlist_free\fR()
-on \fIerrlist\fR if this occurs.
+On error, an error is returned from one of the bookmarks where an error occurred and \fIerrlist\fR is populated with more specific information if a pointer is provided.
+\fIerrlist\fR shall contain keys with the snapshot names and int32 values of the error codes.
+The caller must call \fBnvlist_free\fR(\fI*errlist\fR) when this occurs.
 .SH ERRORS
 .sp
 .LP
@@ -66,8 +64,7 @@ The \fBlzc_destroy_one()\fR function will fail if:
 \fB\fBEBUSY\fR\fR
 .ad
 .RS 13n
-Dataset named \fIdataset\fR has a long hold from a zfs send stream or a user
-hold from \fBlzc_hold\fR().
+Dataset named \fIdataset\fR has a long hold from a zfs send stream or a user hold from \fBlzc_hold\fR().
 .RE
 
 .sp
@@ -78,7 +75,7 @@ hold from \fBlzc_hold\fR().
 .RS 13n
 The pool was uninitialized and a pool with the same GUID already existed.
 .sp
-The dataset or volume \fIfsname\fR has children in its pool's namespace.
+The dataset or volume \fIfsname\fR has children in it's pool's namespace.
 .RE
 
 .sp
@@ -109,7 +106,7 @@ The string \fIfsname\fR exceeds 256 characters.
 .RS 13n
 Pool does not exist.
 .sp
-Loading unitialized pool from cachefile failed because the pool was exported or destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
 Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .sp

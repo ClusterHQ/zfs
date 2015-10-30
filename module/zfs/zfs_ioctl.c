@@ -1420,7 +1420,7 @@ nvlist_smush(nvlist_t *errors, size_t max)
 }
 
 static int
-put_nvlist(zfs_cmd_t *zc, nvlist_t *nvl)
+put_nvlist_enc(zfs_cmd_t *zc, nvlist_t *nvl, int encoding)
 {
 	char *packed = NULL;
 	int error = 0;
@@ -1431,7 +1431,7 @@ put_nvlist(zfs_cmd_t *zc, nvlist_t *nvl)
 	if (size > zc->zc_nvlist_dst_size) {
 		error = SET_ERROR(ENOMEM);
 	} else {
-		packed = fnvlist_pack(nvl, &size);
+		packed = fnvlist_pack_enc(nvl, &size, encoding);
 		if (ddi_copyout(packed, (void *)(uintptr_t)zc->zc_nvlist_dst,
 		    size, zc->zc_iflags) != 0)
 			error = SET_ERROR(EFAULT);
@@ -1442,6 +1442,24 @@ put_nvlist(zfs_cmd_t *zc, nvlist_t *nvl)
 	if (error == 0)
 		zc->zc_nvlist_dst_filled = B_TRUE;
 	return (error);
+}
+
+static int
+put_nvlist_native(zfs_cmd_t *zc, nvlist_t *nvl)
+{
+	return put_nvlist_enc(zc, nvl, NV_ENCODE_NATIVE);
+}
+
+static int
+put_nvlist_xdr(zfs_cmd_t *zc, nvlist_t *nvl)
+{
+	return put_nvlist_enc(zc, nvl, NV_ENCODE_XDR);
+}
+
+static int
+put_nvlist(zfs_cmd_t *zc, nvlist_t *nvl)
+{
+	return put_nvlist_native(zc, nvl);
 }
 
 static int
@@ -6538,7 +6556,7 @@ zfs_ioc_stable(zfs_cmd_t *zc)
 					    zc->zc_nvlist_dst_size);
 				}
 				if (smusherror == 0)
-					puterror = put_nvlist(zc, outnvl);
+					puterror = put_nvlist_xdr(zc, outnvl);
 			}
 
 			if (puterror != 0)

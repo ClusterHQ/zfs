@@ -38,14 +38,12 @@ lzc_get_holds \- Retrieve list of user holds on the specified snapshot.
 .SH DESCRIPTION
 .LP
 The \fBlzc_get_holds\fR() function returns a nvlist of holds on the snapshot.
-The nvlist keys will be the short names of the holds while the nvlist values
-will be uint64 numbers.  The numbers are internal identifiers that have no
-application to userland in the current iteration of the libzfs_core API.
+The nvlist keys will be the short names of the holds while the nvlist values will be uint64 numbers.
+The numbers are internal identifiers that have no application to userland in the current iteration of the libzfs_core API.
 
 .SH RETURN VALUE
-On success, the \fBlzc_get_holds\fR() function returns 0 and fills in
-\fI*holdsp\fR when \fIholdsp\R is non-NULL. On failure, the function returns an
-error code.
+On success, the \fBlzc_get_holds\fR() function returns 0 and fills in \fI*holdsp\fR when \fIholdsp\fR is non-NULL.
+On failure, the function returns an error code.
 
 .SH ERRORS
 .BR lzc_get_holds ()
@@ -53,18 +51,17 @@ can fail with the following errors:
 
 .TP
 .B ENOENT
-Pool does not exist, or if unintialized, the cachefile is out of
-sync because loading the pool failed due to an exported or
-destroyed pool.  If pool exists, snapshot does not exist.
+Pool does not exist, or if uninitialized, the cachefile is out of sync because loading the pool failed due to an exported or destroyed pool.
+If pool exists, snapshot does not exist.
 .TP
 .B EEXIST
-The pool was uninitialized and a pool with the same GUID already
-existed.
+The pool was uninitialized and a pool with the same GUID already existed.
 
 .SH RETURN VALUES
 .sp
 .LP
-Upon successful completion, 0 is returned. Otherwise, an error is returned.
+Upon successful completion, 0 is returned.
+Otherwise, an error is returned.
 
 .SH ERRORS
 .sp
@@ -105,11 +102,9 @@ The string \fIsnapname\fR exceeds 256 characters.
 .RS 13n
 Pool does not exist.
 .sp
-Loading unitialized pool from cachefile failed because the pool was exported or
-destroyed.
+Loading uninitialized pool from cachefile failed because the pool was exported or destroyed.
 .sp
-Internal error where uninitialized pool lacks a GUID in its config that was
-read from the cachefile.
+Internal error where uninitialized pool lacks a GUID in its config that was read from the cachefile.
 .sp
 The snapshot \fIsnapname\fR does not exist.
 .RE
