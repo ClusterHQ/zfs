@@ -591,22 +591,9 @@ recv_read(int fd, void *buf, int ilen)
 	return (0);
 }
 
-/*
- * The simplest receive case: receive from the specified fd, creating the
- * specified snapshot.  Apply the specified properties a "received" properties
- * (which can be overridden by locally-set properties).  If the stream is a
- * clone, its origin snapshot must be specified by 'origin'.  The 'force'
- * flag will cause the target filesystem to be rolled back or destroyed if
- * necessary to receive.
- *
- * Return 0 on success or an errno on failure.
- *
- * Note: this interface does not work on dedup'd streams
- * (those with DMU_BACKUP_FEATURE_DEDUP).
- */
-int
-lzc_receive(const char *snapname, nvlist_t *props, const char *origin,
-    boolean_t force, int fd)
+static int
+recv_impl(const char *snapname, nvlist_t *props, const char *origin,
+    boolean_t force, int fd, const dmu_replay_record_t *begin_record)
 {
 	/*
 	 * The receive ioctl is still legacy, so we need to construct our own
@@ -624,8 +611,9 @@ lzc_receive(const char *snapname, nvlist_t *props, const char *origin,
 	/* zc_name is name of containing filesystem */
 	(void) strlcpy(zc.zc_name, snapname, sizeof (zc.zc_name));
 	atp = strchr(zc.zc_name, '@');
-	if (atp != NULL)
-		*atp = '\0';
+	if (atp == NULL)
+		return (EINVAL);
+	*atp = '\0';
 
 	/* if the fs does not exist, try its parent. */
 	if (!lzc_exists(zc.zc_name)) {
@@ -635,6 +623,9 @@ lzc_receive(const char *snapname, nvlist_t *props, const char *origin,
 		*slashp = '\0';
 
 	}
+
+	/* zc_value is full name of the snapshot to create */
+	(void) strlcpy(zc.zc_value, snapname, sizeof (zc.zc_value));
 
 	if (props != NULL) {
 		/* zc_nvlist_src is props to set */
@@ -648,23 +639,13 @@ lzc_receive(const char *snapname, nvlist_t *props, const char *origin,
 		(void) strlcpy(zc.zc_string, origin, sizeof (zc.zc_string));
 
 	/* zc_begin_record is non-byteswapped BEGIN record */
-	error = recv_read(fd, &drr, sizeof (drr));
-	if (error != 0)
-		goto out;
-	zc.zc_begin_record = drr.drr_u.drr_begin;
-
-	/* zc_value is full name of the snapshot to create */
-	(void) strlcpy(zc.zc_value, snapname, sizeof (zc.zc_value));
-
-	/* if snapshot name is not provided try to take it from the stream */
-	atp = strchr(zc.zc_value, '@');
-	if (atp == NULL) {
-		atp = strchr(zc.zc_begin_record.drr_toname, '@');
-		if (atp == NULL)
-			return (EINVAL);
-		if (strlen(zc.zc_value) + strlen(atp) >= sizeof (zc.zc_value))
-			return (ENAMETOOLONG);
-		strcat(zc.zc_value, atp);
+	if (begin_record == NULL) {
+		error = recv_read(fd, &drr, sizeof (drr));
+		if (error != 0)
+			goto out;
+		zc.zc_begin_record = drr.drr_u.drr_begin;
+	} else {
+		zc.zc_begin_record = begin_record->drr_u.drr_begin;
 	}
 
 	/* zc_cookie is fd to read from */
@@ -685,6 +666,44 @@ out:
 		fnvlist_pack_free(packed, size);
 	free((void*)(uintptr_t)zc.zc_nvlist_dst);
 	return (error);
+}
+
+/*
+ * The simplest receive case: receive from the specified fd, creating the
+ * specified snapshot.  Apply the specified properties as "received" properties
+ * (which can be overridden by locally-set properties).  If the stream is a
+ * clone, its origin snapshot must be specified by 'origin'.  The 'force'
+ * flag will cause the target filesystem to be rolled back or destroyed if
+ * necessary to receive.
+ *
+ * Return 0 on success or an errno on failure.
+ *
+ * Note: this interface does not work on dedup'd streams
+ * (those with DMU_BACKUP_FEATURE_DEDUP).
+ */
+int
+lzc_receive(const char *snapname, nvlist_t *props, const char *origin,
+    boolean_t force, int fd)
+{
+	return (recv_impl(snapname, props, origin, force, fd, NULL));
+}
+
+/*
+ * Like lzc_receive, but allows the caller to read the begin record and then to
+ * pass it in.  That could be useful if the caller wants to derive, for example,
+ * the snapname or the origin parameters based on the information contained in
+ * the begin record.
+ * The begin record must be in its original form as read from the stream,
+ * in other words, it should not be byteswapped.
+ */
+int
+lzc_receive_with_header(const char *snapname, nvlist_t *props,
+    const char *origin, boolean_t force, boolean_t resumable, int fd,
+    const dmu_replay_record_t *begin_record)
+{
+	if (begin_record == NULL)
+		return (EINVAL);
+	return (recv_impl(snapname, props, origin, force, fd, begin_record));
 }
 
 /*
