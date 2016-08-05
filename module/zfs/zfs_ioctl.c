@@ -6548,7 +6548,7 @@ zfs_stable_ioc_zpool_configs(const char *poolname, nvlist_t *innvl,
     nvlist_t *outnvl, nvlist_t *opts, uint64_t version)
 {
 	nvlist_t *configs;
-	uint64_t gen;
+	uint64_t gen = 0;
 
 	if ((configs = spa_all_configs(&gen)) == NULL)
 		return (SET_ERROR(EEXIST));
