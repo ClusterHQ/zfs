@@ -2071,7 +2071,7 @@ dmu_objset_type_name(dmu_objset_type_t type)
 }
 
 nvlist_t *
-dmu_objset_stats_nvlist(dmu_objset_stats_t *stat)
+dmu_objset_stats_nvlist(const dmu_objset_stats_t *stat)
 {
 	nvlist_t *nvl = fnvlist_alloc();
 

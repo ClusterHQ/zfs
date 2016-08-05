@@ -180,7 +180,7 @@ void dmu_objset_evict_done(objset_t *os);
 extern const char *dmu_objset_types[];
 
 const char *dmu_objset_type_name(dmu_objset_type_t type);
-nvlist_t *dmu_objset_stats_nvlist(dmu_objset_stats_t *stat);
+nvlist_t *dmu_objset_stats_nvlist(const dmu_objset_stats_t *stat);
 int dmu_nvl_get_type(nvlist_t *nvl, const char *key, dmu_objset_type_t *type);
 int dmu_objset_stat_nvlts(nvlist_t *nvl, dmu_objset_stats_t *stat);
 
